@@ -126,13 +126,28 @@ else if (Argument = "/uninstall")
 else if (Argument = "/cmd")
 {
     folder := A_Args[2]
-    SplitPath, folder,,,,, OutDrive
+    SplitPath, folder, OutFileName, OutDir,,, OutDrive
     if (RTrim(folder, OmitChars := """") = OutDrive)
+    {
         folder := "\"
-    if FileExist(A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk")
-        Run, "%A_AppData%\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk" /k "%OutDrive% && cd %folder%"
+        OutFileName := ""
+    }
+    CurrentDirectory := A_WorkingDir
+    SetWorkingDir, %OutDir%\%OutFileName%
+    if ErrorLevel
+    {
+        if FileExist(A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk")
+            Run, *RunAs "%A_AppData%\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk" /k "%OutDrive% && cd %folder%"
+        else
+            Run, *RunAs "%A_ComSpec%" /k "%OutDrive% && cd %folder%"
+    }
     else
-        Run, "%A_ComSpec%" /k "%OutDrive% && cd %folder%"
+    {
+        if FileExist(A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk")
+            Run, "%A_AppData%\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk" /k "%OutDrive% && cd %folder%"
+        else
+            Run, "%A_ComSpec%" /k "%OutDrive% && cd %folder%"
+    }
 }
 else if (Argument = "/elevatedcmd")
 {
