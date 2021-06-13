@@ -136,6 +136,7 @@ else if (Argument = "/cmd")
     SetWorkingDir, %OutDir%\%OutFileName%
     if ErrorLevel
     {
+        SetWorkingDir % CurrentDirectory
         if FileExist(A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk")
             Run, *RunAs "%A_AppData%\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk" /k "%OutDrive% && cd %folder%"
         else
@@ -143,6 +144,7 @@ else if (Argument = "/cmd")
     }
     else
     {
+        SetWorkingDir % CurrentDirectory
         if FileExist(A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk")
             Run, "%A_AppData%\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk" /k "%OutDrive% && cd %folder%"
         else
