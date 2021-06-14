@@ -41,6 +41,35 @@ IsKeyValue(KeyPath, ValueName)
 }
 
 
+IsProtectedDirectory(Directory)
+{
+    CurrentDirectory := A_WorkingDir
+    SetWorkingDir, % Directory
+    DirectoryError := ErrorLevel
+    SetWorkingDir, % CurrentDirectory
+    if DirectoryError
+        return true
+}
+
+
+RunCommandPrompt(Directory, Elevated := false)
+{
+    if FileExist(A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk")
+        CommandPromptPath := A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk"
+    else
+        CommandPromptPath := A_ComSpec
+
+    SplitPath, Directory,,,,, OutDrive
+    if (Directory = OutDrive)
+        Directory = "\"
+
+    if Elevated
+        Run, *RunAs "%CommandPromptPath%" /k "%OutDrive% && cd %Directory%"
+    else
+        Run, "%CommandPromptPath%" /k "%OutDrive% && cd %Directory%"
+}
+
+
 if not Argument
 {
     UninstallMessage := "Hey it looks like you already have this awesome app installed! Uninstall your previous version before attempting to reinstall."
@@ -125,40 +154,14 @@ else if (Argument = "/uninstall")
 }
 else if (Argument = "/cmd")
 {
-    folder := A_Args[2]
-    SplitPath, folder, OutFileName, OutDir,,, OutDrive
-    if (RTrim(folder, OmitChars := """") = OutDrive)
-    {
-        folder := "\"
-        OutFileName := ""
-    }
-    CurrentDirectory := A_WorkingDir
-    SetWorkingDir, %OutDir%\%OutFileName%
-    if ErrorLevel
-    {
-        SetWorkingDir % CurrentDirectory
-        if FileExist(A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk")
-            Run, *RunAs "%A_AppData%\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk" /k "%OutDrive% && cd %folder%"
-        else
-            Run, *RunAs "%A_ComSpec%" /k "%OutDrive% && cd %folder%"
-    }
+    Directory := RTrim(A_Args[2], OmitChars := """")
+    if IsProtectedDirectory(Directory)
+        RunCommandPrompt(Directory, Elevated := true)
     else
-    {
-        SetWorkingDir % CurrentDirectory
-        if FileExist(A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk")
-            Run, "%A_AppData%\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk" /k "%OutDrive% && cd %folder%"
-        else
-            Run, "%A_ComSpec%" /k "%OutDrive% && cd %folder%"
-    }
+        RunCommandPrompt(Directory)
 }
 else if (Argument = "/elevatedcmd")
 {
-    folder := A_Args[2]
-    SplitPath, folder,,,,, OutDrive
-    if (RTrim(folder, OmitChars := """") = OutDrive)
-        folder := "\"
-    if FileExist(A_AppData "\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk")
-        Run, *RunAs "%A_AppData%\Microsoft\Windows\Start Menu\Programs\System Tools\Command Prompt.lnk" /k "%OutDrive% && cd %folder%"
-    else
-        Run, *RunAs "%A_ComSpec%" /k "%OutDrive% && cd %folder%"
+    Directory := RTrim(A_Args[2], OmitChars := """")
+    RunCommandPrompt(Directory, Elevated := true)
 }
